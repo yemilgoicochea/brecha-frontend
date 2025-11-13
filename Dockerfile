@@ -1,23 +1,31 @@
-# --- STAGE 1: Build Angular Application (igual que el tuyo) ---
+# --- STAGE 1: Build Angular Application ---
+# Use a Node.js image for the build process
 FROM node:20-alpine AS builder
+
+# Set the working directory
 WORKDIR /app
-COPY package.json package-lock.json ./
+
+# Copy base files and install dependencies
+COPY package.json package-lock.json angular.json ./
 RUN npm install
+
+# Copy all source code
 COPY . .
-# La ruta de salida que usas en package.json es dist/browser
-RUN npm run build -- --output-path=./dist/browser --configuration=production
+
+# Build the Angular app (output path is taken from angular.json: "dist/brecha-frontend")
+RUN npm run build -- --configuration=production
 
 # --- STAGE 2: Serve the Static Files with Nginx ---
+# Use a lightweight Nginx image to serve the build
 FROM nginx:alpine
 
-# 1. Copiar la configuración personalizada que escucha en 8080
-# NOTA: Asegúrate de que el archivo nginx.conf exista en la raíz de tu repo
+# 1. Copy the Nginx configuration (must have 'listen 8080;')
 COPY ./nginx.conf /etc/nginx/conf.d/default.conf
 
-# 2. Copiar los archivos compilados
-# Tu build anterior usaba /dist/browser, así que lo mantenemos.
-COPY --from=builder /app/dist/browser /usr/share/nginx/html
+# 2. Copy the compiled files from the 'builder' stage
+# KEY FIX: The path is now /app/dist/brecha-frontend/ where "brecha-frontend" is the outputPath from angular.json
+COPY --from=builder /app/dist/brecha-frontend/ /usr/share/nginx/html/
 
-# EXPOSE 8080 es opcional, pero buena práctica de documentación.
-EXPOSE 8080 
+# Document the port, even though Nginx is already set to 8080
+EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]

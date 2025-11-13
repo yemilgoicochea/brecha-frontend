@@ -1,3 +1,4 @@
+
 # --- STAGE 1: Build Angular Application ---
 # Use a Node.js image for the build process
 FROM node:20-alpine AS builder
@@ -12,8 +13,14 @@ RUN npm install
 # Copy all source code
 COPY . .
 
-# Build the Angular app (output path is taken from angular.json: "dist/brecha-frontend")
-RUN npm run build -- --configuration=production
+# Build the Angular app.
+# IMPORTANT: Add --base-href / to ensure asset paths are correct for Nginx at root.
+RUN npm run build -- --configuration=production --base-href /
+
+# --- DEBUG STEP: Check output folder structure ---
+# This will show up in GitHub Actions logs. If you see your index.html here, the copy will work.
+RUN ls -R /app/dist/
+
 
 # --- STAGE 2: Serve the Static Files with Nginx ---
 # Use a lightweight Nginx image to serve the build
@@ -23,9 +30,8 @@ FROM nginx:alpine
 COPY ./nginx.conf /etc/nginx/conf.d/default.conf
 
 # 2. Copy the compiled files from the 'builder' stage
-# KEY FIX: The path is now /app/dist/brecha-frontend/ where "brecha-frontend" is the outputPath from angular.json
-COPY --from=builder /app/dist/brecha-frontend/ /usr/share/nginx/html/
+# The path is /app/dist/brecha-frontend/ (according to your angular.json)
+COPY --from=builder /app/dist/brecha-frontend/browser/ /usr/share/nginx/html/
 
-# Document the port, even though Nginx is already set to 8080
 EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]

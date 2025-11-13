@@ -71,4 +71,6 @@ jobs:
           image: ${{ env.IMAGE_TAG }}
           project_id: ${{ env.PROJECT_ID }}
           # Set the Service Account that the Cloud Run service will use for runtime permissions (not CI/CD)
-          flags: '--service-account=${{ env.GCP_SA_EMAIL }}'
+          flags: |
+            --service-account=${{ env.GCP_SA_EMAIL }}
+            --allow-unauthenticated

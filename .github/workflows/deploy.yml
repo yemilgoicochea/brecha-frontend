@@ -13,11 +13,11 @@ on:
 # 2. GLOBAL ENVIRONMENT VARIABLES (Conditional setup)
 env:
   # Ternary expression to set project ID based on the branch
-  PROJECT_ID: ${{ contains(github.ref_name, 'main') && 'p-brecha-251-219-11-CD' || 'd-brecha-251-219-11-CD' }}
+  PROJECT_ID: ${{ contains(github.ref_name, 'main') && 'p-brecha-251-219-11-cd' || 'd-brecha-251-219-11-CD' }}
   # Ternary expression to set service name based on the branch
   SERVICE_NAME: ${{ contains(github.ref_name, 'main') && 'frontend-prod' || 'frontend-dev' }}
   REGION: us-central1 # Adjust your Cloud Run region here
-  GCP_SA_EMAIL: ${{ contains(github.ref_name, 'main') && 'github-ci-service@p-brecha-251-219-11-CD.iam.gserviceaccount.com' || 'github-ci-service@d-brecha-251-219-11-CD.iam.gserviceaccount.com' }}
+  GCP_SA_EMAIL: ${{ contains(github.ref_name, 'main') && 'github-ci-service@p-brecha-251-219-11-cd.iam.gserviceaccount.com' || 'github-ci-service@d-brecha-251-219-11-CD.iam.gserviceaccount.com' }}
 
 # 3. JOBS
 jobs:

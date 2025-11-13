@@ -1,0 +1,74 @@
+name: Deploy Frontend to Cloud Run
+
+# 1. TRIGGERS
+on:
+  push:
+    branches:
+      # Triggers deployment to the Development environment
+      - dev 
+      # Triggers deployment to the Production environment
+      - main
+
+# 2. GLOBAL ENVIRONMENT VARIABLES (Conditional setup)
+# 2. GLOBAL ENVIRONMENT VARIABLES (Conditional setup)
+env:
+  # Ternary expression to set project ID based on the branch
+  PROJECT_ID: ${{ contains(github.ref_name, 'main') && 'P-brecha-251-219-11-CD' || 'd-brecha-251-219-11-CD' }}
+  # Ternary expression to set service name based on the branch
+  SERVICE_NAME: ${{ contains(github.ref_name, 'main') && 'frontend-prod' || 'frontend-dev' }}
+  REGION: us-central1 # Adjust your Cloud Run region here
+  GCP_SA_EMAIL: ${{ contains(github.ref_name, 'main') && 'github-ci-service@P-brecha-251-219-11-CD.iam.gserviceaccount.com' || 'github-ci-service@d-brecha-251-219-11-CD.iam.gserviceaccount.com' }}
+
+# 3. JOBS
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    # Permissions required for keyless authentication (ID Token is for WIF, but is harmless here)
+    permissions:
+      contents: 'read'
+      id-token: 'write' 
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # A. Authenticate to GCP using the JSON Service Account Key
+      - name: Authenticate to GCP
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }} # Uses the secret you stored
+
+      # B. Set up gcloud and configure Docker for Artifact Registry/GCR
+      - name: Setup Google Cloud CLI and Docker
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          
+      - name: Configure Docker authentication
+        run: gcloud auth configure-docker --quiet ${{ env.REGION }}-docker.pkg.dev
+
+      # C. Build and Tag the Docker Image
+      - name: Build and Tag Docker Image
+        run: |
+          # Use Artifact Registry path: REGION-docker.pkg.dev/PROJECT_ID/REPOSITORY/IMAGE:SHA
+          IMAGE_TAG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloud-run-repo/${{ env.SERVICE_NAME }}:${{ github.sha }}"
+          # NOTE: We assume a repository named 'cloud-run-repo' exists in Artifact Registry.
+          docker build -t $IMAGE_TAG .
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+          
+      # D. Push the Image
+      - name: Push Docker Image to Artifact Registry
+        run: docker push ${{ env.IMAGE_TAG }}
+
+      # E. Deploy to Cloud Run
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ env.REGION }}
+          image: ${{ env.IMAGE_TAG }}
+          project_id: ${{ env.PROJECT_ID }}
+          # Set the Service Account that the Cloud Run service will use for runtime permissions (not CI/CD)
+          service_account_email: ${{ env.GCP_SA_EMAIL }}

@@ -4,12 +4,16 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/spec",
+    "module": "esnext",
     "types": [
-      "jasmine"
+      "jest",
+      "node"
     ]
   },
   "include": [
     "src/**/*.spec.ts",
-    "src/**/*.d.ts"
+    "src/**/*.d.ts",
+    "test/msw-server.ts",
+    "setup-jest.ts"
   ]
 }

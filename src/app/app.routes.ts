@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
-import { ClassifierComponent } from './features/classifier/classifier.component';
-import { ResultsComponent } from './features/results/results.component';
+import { ClassifierPageComponent } from './features/classifier/classifier-page.component';
+import { HistoryComponent } from './features/classifier/history.component';
 
 export const routes: Routes = [
     {
@@ -10,11 +10,11 @@ export const routes: Routes = [
     },
     {
         path: 'classify',
-        component: ClassifierComponent
+        component: ClassifierPageComponent
     },
     {
-        path: 'results',
-        component: ResultsComponent
+        path: 'history',
+        component: HistoryComponent
     },
     {
         path: 'dashboard',

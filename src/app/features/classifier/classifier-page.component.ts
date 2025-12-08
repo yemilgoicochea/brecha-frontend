@@ -47,21 +47,32 @@ import { ProjectAnalysis } from '../../models/analysis.model';
           </button>
           <button type="reset" (click)="reset()" class="text-sm text-gray-500 hover:text-gray-700">Limpiar</button>
         </div>
-        <div *ngIf="error" class="text-sm text-red-600">{{ error }}</div>
+        <!-- Solo mostrar error aquí si es de validación de formulario -->
+        <div *ngIf="formError" class="text-sm text-red-600">{{ formError }}</div>
       </form>
       <div>
         <p class="text-xs font-semibold tracking-widest text-indigo-600 mb-2">RESULTADOS</p>
         <h2 class="text-4xl font-extrabold leading-tight mb-6">Brechas<br/>identificadas</h2>
-        <app-gap-cards [gaps]="analysis?.gaps || []"></app-gap-cards>
-        <div *ngIf="analysis" class="mt-6">
-          <button (click)="download()" class="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-indigo-600" aria-label="Descargar resultados">
-            Descargar resultados
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M12 3a.75.75 0 01.75.75v9.19l2.72-2.72a.75.75 0 111.06 1.06l-4 4a.75.75 0 01-1.06 0l-4-4a.75.75 0 011.06-1.06l2.72 2.72V3.75A.75.75 0 0112 3zm-9 15.75A2.25 2.25 0 015.25 16.5h13.5A2.25 2.25 0 0121 18.75v.75a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 19.5v-.75z" clip-rule="evenodd"/></svg>
-          </button>
-          <div class="mt-4 rounded bg-gray-50 p-4 text-xs text-gray-600 border border-gray-200 overflow-auto max-h-64">
-            <pre>{{ analysis | json }}</pre>
+        <ng-container *ngIf="error && !analysis">
+          <div class="text-sm text-red-600 mb-4">{{ error }}</div>
+        </ng-container>
+        <ng-container *ngIf="analysis">
+          <ng-container *ngIf="analysis.gaps.length === 0; else showGaps">
+            <div class="text-sm text-gray-500 mb-4">No se identificaron brechas para este proyecto.</div>
+          </ng-container>
+          <ng-template #showGaps>
+            <app-gap-cards [gaps]="analysis.gaps"></app-gap-cards>
+          </ng-template>
+          <div class="mt-6">
+            <button (click)="download()" class="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-indigo-600" aria-label="Descargar resultados">
+              Descargar resultados
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M12 3a.75.75 0 01.75.75v9.19l2.72-2.72a.75.75 0 111.06 1.06l-4 4a.75.75 0 01-1.06 0l-4-4a.75.75 0 011.06-1.06l2.72 2.72V3.75A.75.75 0 0112 3zm-9 15.75A2.25 2.25 0 015.25 16.5h13.5A2.25 2.25 0 0121 18.75v.75a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 19.5v-.75z" clip-rule="evenodd"/></svg>
+            </button>
+            <div class="mt-4 rounded bg-gray-50 p-4 text-xs text-gray-600 border border-gray-200 overflow-auto max-h-64">
+              <pre>{{ analysis | json }}</pre>
+            </div>
           </div>
-        </div>
+        </ng-container>
       </div>
     </div>
   `
@@ -74,6 +85,7 @@ export class ClassifierPageComponent {
   file?: File;
   loading = false;
   error = '';
+  formError = '';
   analysis: ProjectAnalysis | null = null;
 
   constructor(private svc: ClassificationService) {}
@@ -85,8 +97,9 @@ export class ClassifierPageComponent {
 
   async classify() {
     this.error = '';
+    this.formError = '';
     if (!this.projectName.trim()) {
-      this.error = 'Nombre de proyecto requerido';
+      this.formError = 'Nombre de proyecto requerido';
       return;
     }
     this.loading = true;
@@ -99,6 +112,7 @@ export class ClassifierPageComponent {
       });
     } catch (e: any) {
       this.error = e.message || 'Error en la clasificación';
+      this.analysis = null;
     } finally {
       this.loading = false;
     }
@@ -112,6 +126,7 @@ export class ClassifierPageComponent {
     this.file = undefined;
     this.analysis = null;
     this.error = '';
+    this.formError = '';
   }
 
   download() {

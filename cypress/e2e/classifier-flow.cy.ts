@@ -46,4 +46,38 @@ describe('Classifier flow', () => {
     cy.wait('@classifyError');
     cy.contains(/error|fallo/i).should('be.visible');
   });
+
+  it('should display color indicators for confidence levels', () => {
+    // Mock API response with different confidence levels
+    cy.intercept('POST', '**/api/v1/classify', {
+      statusCode: 200,
+      body: {
+        labels: [
+          { id: 1, label: 'High confidence', confianza: 0.85, justificacion: 'High confidence test' },
+          { id: 2, label: 'Medium confidence', confianza: 0.70, justificacion: 'Medium confidence test' },
+          { id: 3, label: 'Low confidence', confianza: 0.45, justificacion: 'Low confidence test' }
+        ]
+      }
+    }).as('classifyWithColors');
+    
+    cy.visit('/classify');
+    cy.get('input[name="projectName"]').type('Test project');
+    cy.get('button[type="button"]:not([type="reset"])').first().click();
+    
+    cy.wait('@classifyWithColors');
+    
+    // Verify green color indicator appears (confidence ≥80%)
+    cy.get('[class*="bg-green-"][class*="text-green-"]').should('exist');
+    
+    // Verify yellow color indicator appears (confidence 60-79%)
+    cy.get('[class*="bg-yellow-"][class*="text-yellow-"]').should('exist');
+    
+    // Verify red color indicator appears (confidence <60%)
+    cy.get('[class*="bg-red-"][class*="text-red-"]').should('exist');
+    
+    // Verify percentages are displayed
+    cy.contains('85%').should('exist');
+    cy.contains('70%').should('exist');
+    cy.contains('45%').should('exist');
+  });
 });

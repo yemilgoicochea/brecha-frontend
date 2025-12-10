@@ -29,7 +29,7 @@ describe('HistoryComponent', () => {
     compiled = fixture.nativeElement;
   });
 
-  describe('HU012 - Visualización de justificación', () => {
+  describe('Justification display', () => {
     it('should display justification for each gap in table', () => {
       const justification1 = 'Justificación detallada para brecha 1';
       const justification2 = 'Otra justificación para brecha 2';

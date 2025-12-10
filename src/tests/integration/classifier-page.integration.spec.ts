@@ -1,10 +1,12 @@
 import { ClassifierPageComponent } from '../../app/features/classifier/classifier-page.component';
 import { ClassificationService } from '../../app/features/classifier/classification.service';
+import { HttpClient } from '@angular/common/http';
 import { expect, jest } from '@jest/globals';
 
 describe('ClassifierPageComponent Integration (logic only)', () => {
   it('classifies using real service and populates analysis', async () => {
-    const svc = new ClassificationService();
+    const httpMock = {} as HttpClient;
+    const svc = new ClassificationService(httpMock);
     const comp = new ClassifierPageComponent(svc as any);
     comp.projectName = 'Proyecto INT';
     const spy = jest.spyOn(svc, 'classify').mockResolvedValue({

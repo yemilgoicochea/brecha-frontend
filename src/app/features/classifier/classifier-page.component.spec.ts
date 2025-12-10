@@ -1,5 +1,6 @@
 import { ClassifierPageComponent } from './classifier-page.component';
 import { ClassificationService } from './classification.service';
+import { HttpClient } from '@angular/common/http';
 import { expect, jest } from '@jest/globals';
 
 describe('ClassifierPageComponent (class logic)', () => {
@@ -8,7 +9,8 @@ describe('ClassifierPageComponent (class logic)', () => {
 
   beforeEach(() => {
     localStorage.clear();
-    svc = new ClassificationService();
+    const httpMock = {} as HttpClient;
+    svc = new ClassificationService(httpMock);
     component = new ClassifierPageComponent(svc as any);
     jest.spyOn(svc, 'classify').mockResolvedValue({
       id: '11111111-1111-1111-1111-111111111111',
@@ -34,7 +36,7 @@ describe('ClassifierPageComponent (class logic)', () => {
   it('missing projectName sets error', async () => {
     component.projectName = '';
     await component.classify();
-    expect(component.error).toContain('Nombre de proyecto');
+    expect(component.formError).toContain('Nombre de proyecto');
     expect(svc.classify).not.toHaveBeenCalled();
   });
 

@@ -5,6 +5,7 @@ import { ProjectAnalysis, GapResult } from '../../models/analysis.model';
 import { API_CONFIG, getApiUrl } from '../../config/api.config';
 
 interface ApiLabel {
+  id?: number;
   label: string;
   confianza: number;
   justificacion: string;
@@ -60,6 +61,7 @@ export class ClassificationService {
 
       // Mapear respuesta de API al modelo interno
       const gaps: GapResult[] = response.labels.map((label: any) => ({
+        id: label.id,
         name: label.label,
         score: label.confianza,
         reason: label.justificacion

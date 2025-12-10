@@ -1,4 +1,5 @@
 export interface GapResult {
+  id?: number;
   name: string;
   score: number; // 0..1
   reason?: string;

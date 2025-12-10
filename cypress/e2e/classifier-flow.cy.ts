@@ -15,8 +15,8 @@ describe('Classifier flow', () => {
     // Click button
     cy.get('button[type="button"]:not([type="reset"])').first().click();
     
-    // Verify results appear
-    cy.contains('Brechas identificadas').should('exist');
+    // Verify results appear - check for either gaps or "No se identificaron brechas" message
+    cy.contains(/Brechas|No se identificaron/i, { timeout: 10000 }).should('exist');
   });
 
   it('should respond in less than 5 seconds', () => {

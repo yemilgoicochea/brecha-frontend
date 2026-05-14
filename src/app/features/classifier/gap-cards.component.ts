@@ -8,7 +8,7 @@ import { GapResult } from '../../models/analysis.model';
   imports: [CommonModule],
   template: `
     <div class="space-y-4" *ngIf="gaps.length; else empty">
-      <div *ngFor="let g of gaps; let i = index" class="flex items-center gap-4 rounded-xl border border-gray-200 bg-white/80 backdrop-blur px-5 py-4 shadow-sm hover:shadow-md transition">
+      <div *ngFor="let g of gaps; let i = index" class="flex items-center gap-4 rounded-xl border border-gray-700 bg-gray-800 px-5 py-4 hover:border-gray-600 transition">
         <!-- Dynamic color icon based on confidence score -->
         <div [ngClass]="getColorClasses(g.score)" class="flex h-12 w-12 items-center justify-center rounded-lg">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6">
@@ -18,7 +18,7 @@ import { GapResult } from '../../models/analysis.model';
         <div class="flex-1 min-w-0">
           <!-- Dynamic color percentage text -->
           <p class="text-sm font-semibold"><span [ngClass]="getScoreColorClass(g.score)" class="font-bold">{{ g.score * 100 | number:'1.0-0' }}%</span> · {{ g.name }}</p>
-          <p class="text-xs text-gray-500 mt-0.5">{{ g.reason || 'Motivo no disponible' }}</p>
+          <p class="text-xs text-gray-400 mt-0.5">{{ g.reason || 'Motivo no disponible' }}</p>
         </div>
       </div>
     </div>
@@ -37,11 +37,11 @@ export class GapCardsComponent {
   getColorClasses(score: number): string {
     const percentage = score * 100;
     if (percentage >= 80) {
-      return 'bg-green-50 text-green-600';
+      return 'bg-emerald-900/30 text-emerald-400';
     } else if (percentage >= 60) {
-      return 'bg-yellow-50 text-yellow-600';
+      return 'bg-amber-900/30 text-amber-400';
     } else {
-      return 'bg-red-50 text-red-600';
+      return 'bg-red-900/30 text-red-400';
     }
   }
 
@@ -51,11 +51,11 @@ export class GapCardsComponent {
   getScoreColorClass(score: number): string {
     const percentage = score * 100;
     if (percentage >= 80) {
-      return 'text-green-600';
+      return 'text-emerald-400';
     } else if (percentage >= 60) {
-      return 'text-yellow-600';
+      return 'text-amber-400';
     } else {
-      return 'text-red-600';
+      return 'text-red-400';
     }
   }
 }

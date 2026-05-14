@@ -15,6 +15,7 @@ export class AppComponent {
   title = 'brecha-frontend';
   currentUser: User | null = null;
   isAuthenticated = false;
+  isAdmin = false;
   mobileMenuOpen = false;
 
   constructor(
@@ -23,6 +24,7 @@ export class AppComponent {
   ) {
     this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
+      this.isAdmin = user?.role === 'admin';
     });
 
     this.authService.isAuthenticated$.subscribe(isAuth => {

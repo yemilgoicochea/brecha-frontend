@@ -9,6 +9,7 @@ export interface User {
   email: string;
   name: string;
   last_name?: string;
+  role?: string;
 }
 
 export interface AuthResponse {
@@ -97,5 +98,9 @@ export class AuthService {
 
   isLoggedIn(): boolean {
     return !!this.getToken();
+  }
+
+  isAdmin(): boolean {
+    return this.currentUser$.value?.role === 'admin';
   }
 }

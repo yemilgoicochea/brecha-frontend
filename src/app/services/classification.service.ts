@@ -85,4 +85,9 @@ export class ClassificationService {
     const url = getApiUrl('/api/v1/history');
     return this.http.get<ClassificationResponse[]>(url);
   }
+
+  retryQuery(queryId: string): Observable<any> {
+    const url = getApiUrl(`/api/v1/query/${queryId}/retry`);
+    return this.http.post<any>(url, {});
+  }
 }

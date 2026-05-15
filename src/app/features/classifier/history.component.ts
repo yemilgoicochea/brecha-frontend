@@ -134,8 +134,20 @@ interface Classification {
 
             <!-- No results -->
             <div *ngIf="loadingDetail !== q.query_id && getClassifications(q.query_id).length === 0"
-                 class="text-gray-500 text-sm py-2">
-              No se encontraron indicadores de brecha para este proyecto.
+                 class="flex items-center justify-between py-2">
+              <span class="text-gray-500 text-sm">No se encontraron indicadores de brecha para este proyecto.</span>
+              <button (click)="retryClassification(q, $event)"
+                      [disabled]="retrying.has(q.query_id)"
+                      class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-indigo-700/50 text-indigo-400 hover:bg-indigo-900/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg *ngIf="!retrying.has(q.query_id)" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+                <svg *ngIf="retrying.has(q.query_id)" class="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <circle cx="12" cy="12" r="10" stroke-width="4" class="opacity-25"></circle>
+                  <path d="M4 12a8 8 0 018-8" stroke-width="4" class="opacity-75"></path>
+                </svg>
+                {{ retrying.has(q.query_id) ? 'Reintentando...' : 'Reintentar' }}
+              </button>
             </div>
 
             <!-- Results -->
@@ -185,6 +197,7 @@ export class HistoryComponent implements OnInit, OnDestroy {
   expandedId: string | null = null;
   loadingDetail: string | null = null;
   classificationsCache: Record<string, Classification[]> = {};
+  retrying = new Set<string>();
   readonly refreshInterval = 8000;
   private refreshTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -255,6 +268,24 @@ export class HistoryComponent implements OnInit, OnDestroy {
 
   getClassifications(queryId: string): Classification[] {
     return this.classificationsCache[queryId] || [];
+  }
+
+  retryClassification(q: ClassificationResponse, event: Event) {
+    event.stopPropagation();
+    if (this.retrying.has(q.query_id)) return;
+
+    this.retrying.add(q.query_id);
+    this.classificationService.retryQuery(q.query_id).subscribe({
+      next: () => {
+        this.retrying.delete(q.query_id);
+        this.expandedId = null;
+        delete this.classificationsCache[q.query_id];
+        this.loadHistory();
+      },
+      error: () => {
+        this.retrying.delete(q.query_id);
+      },
+    });
   }
 
   getStatusLabel(status: string): string {

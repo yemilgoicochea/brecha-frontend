@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { finalize, timeout } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 
 @Component({
@@ -105,14 +106,18 @@ export class LoginComponent {
     this.loading = true;
     this.error = '';
 
-    this.authService.login(this.email, this.password).subscribe({
-      next: (response) => {
-        this.router.navigate(['/dashboard']);
-      },
+    this.authService.login(this.email, this.password).pipe(
+      timeout(15000),
+      finalize(() => this.loading = false),
+    ).subscribe({
+      next: () => this.router.navigate(['/dashboard']),
       error: (error) => {
-        this.error = error.error?.detail || 'Error al iniciar sesión';
-        this.loading = false;
-      }
+        if (error.name === 'TimeoutError') {
+          this.error = 'El servidor tardó demasiado en responder. Intenta de nuevo.';
+        } else {
+          this.error = error.error?.detail || 'Error al iniciar sesión';
+        }
+      },
     });
   }
 }

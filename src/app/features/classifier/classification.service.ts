@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { ProjectAnalysis, GapResult } from '../../models/analysis.model';
 import { API_CONFIG, getApiUrl } from '../../config/api.config';
 
@@ -44,11 +44,12 @@ export class ClassificationService {
 
   async classify(file: File | undefined, text: string, meta: { projectName: string; projectCode?: string; municipality?: string; description?: string; } ): Promise<ProjectAnalysis> {
     try {
-      // Llamar a la API con el título (por ahora solo title)
       const apiUrl = getApiUrl(API_CONFIG.endpoints.classify);
-      const response: any = await this.http.post(apiUrl, {
-        title: meta.projectName
-      }).toPromise();
+      const body: Record<string, string> = { title: meta.projectName };
+      if (meta.description?.trim()) {
+        body['description'] = meta.description.trim();
+      }
+      const response: any = await firstValueFrom(this.http.post(apiUrl, body));
 
       // Si la API responde con error, lanzar excepción con el mensaje
       if (response?.error) {

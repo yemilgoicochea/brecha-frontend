@@ -127,4 +127,12 @@ export class AdminService {
   getGovernmentLevels(): Observable<GovernmentLevel[]> {
     return this.http.get<GovernmentLevel[]>(getApiUrl('/api/v1/admin/government-levels'));
   }
+
+  // ── Model ───────────────────────────────────────────────
+  refreshModel(): Observable<{ message: string; message_id: string }> {
+    return this.http.post<{ message: string; message_id: string }>(
+      getApiUrl('/api/v1/admin/model/refresh'),
+      {}
+    );
+  }
 }

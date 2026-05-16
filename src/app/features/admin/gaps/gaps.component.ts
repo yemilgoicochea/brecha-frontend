@@ -24,13 +24,27 @@ import { AdminService, Gap, GapCreate, GapListResponse, GovernmentLevel, Sector 
           <h1 class="text-3xl font-extrabold text-white">Indicadores de Brecha</h1>
           <p class="text-gray-400 mt-1">CRUD de indicadores de brecha por sector</p>
         </div>
-        <button (click)="openCreate()"
-          class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors font-medium">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          Nuevo indicador
-        </button>
+        <div class="flex flex-wrap gap-2">
+          <button (click)="triggerModelRefresh()" [disabled]="refreshing"
+            class="flex items-center gap-2 px-4 py-2.5 bg-emerald-700 hover:bg-emerald-600 disabled:bg-emerald-900 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
+            title="Recarga el catálogo de brechas en el modelo IA sin reiniciar el worker">
+            <svg *ngIf="!refreshing" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+            </svg>
+            <svg *ngIf="refreshing" class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="10" stroke-width="4" class="opacity-25"></circle>
+              <path d="M4 12a8 8 0 018-8" stroke-width="4" class="opacity-75"></path>
+            </svg>
+            {{ refreshing ? 'Enviando...' : 'Refrescar modelo IA' }}
+          </button>
+          <button (click)="openCreate()"
+            class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors font-medium">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Nuevo indicador
+          </button>
+        </div>
       </div>
 
       <!-- Filters -->
@@ -65,6 +79,17 @@ import { AdminService, Gap, GapCreate, GapListResponse, GovernmentLevel, Sector 
           class="px-3 py-2 text-sm text-gray-400 hover:text-white bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors">
           Limpiar
         </button>
+      </div>
+
+      <!-- Refresh feedback -->
+      <div *ngIf="refreshMessage" class="bg-emerald-900/20 border border-emerald-700 text-emerald-400 rounded-lg p-4 mb-4 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 shrink-0">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        {{ refreshMessage }}
+      </div>
+      <div *ngIf="refreshError" class="bg-red-900/20 border border-red-700 text-red-400 rounded-lg p-4 mb-4">
+        {{ refreshError }}
       </div>
 
       <!-- Error -->
@@ -390,6 +415,11 @@ export class GapsComponent implements OnInit {
   // Delete confirm
   gapToDelete: Gap | null = null;
 
+  // Model refresh
+  refreshing = false;
+  refreshMessage = '';
+  refreshError = '';
+
   constructor(private adminService: AdminService) {}
 
   ngOnInit() {
@@ -415,6 +445,24 @@ export class GapsComponent implements OnInit {
       valid_from: '',
       valid_to: '',
     };
+  }
+
+  triggerModelRefresh() {
+    this.refreshing = true;
+    this.refreshMessage = '';
+    this.refreshError = '';
+    this.adminService.refreshModel().subscribe({
+      next: (res) => {
+        this.refreshing = false;
+        this.refreshMessage = res.message;
+        setTimeout(() => (this.refreshMessage = ''), 5000);
+      },
+      error: () => {
+        this.refreshing = false;
+        this.refreshError = 'No se pudo enviar la señal de refresco.';
+        setTimeout(() => (this.refreshError = ''), 5000);
+      },
+    });
   }
 
   loadSectors() {

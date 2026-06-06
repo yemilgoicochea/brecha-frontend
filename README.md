@@ -84,24 +84,65 @@ src/app/
 
 ## Tests
 
-El frontend actualmente no tiene tests automatizados. Angular CLI incluye soporte para:
+El frontend tiene dos tipos de pruebas independientes:
 
-| Tipo | Tecnología | Estado |
-|------|-----------|--------|
-| Unit tests | Karma + Jasmine | No implementado |
-| E2E tests | A elección (Cypress, Playwright) | No implementado |
+| Tipo | Herramienta | Propósito | Requiere servidor |
+|------|-------------|-----------|-------------------|
+| Unitarios / componente | Jest + Angular TestBed | Lógica interna, servicios, guards | No |
+| E2E (End-to-End) | Cypress | Flujos completos en navegador real | Sí (Angular en :4200) |
 
-Áreas pendientes de cubrir:
-- `ClassificationService` (submit, polling, retry, history)
-- `AuthGuard` y `AdminGuard`
-- Componentes `HistoryComponent` y `ClassifierPageComponent`
+---
+
+### 1. Tests unitarios (Jest)
+
+No requieren ningún servidor. Los servicios HTTP se mockean con `HttpTestingController`.
+
+| Archivo | Qué prueba |
+|---------|------------|
+| `auth.service.spec.ts` | Login, logout, registro, isAdmin |
+| `auth.guard.spec.ts` | Redirige a `/login` si no autenticado |
+| `admin.guard.spec.ts` | Redirige a `/dashboard` si no es admin |
+| `auth.interceptor.spec.ts` | Agrega `Bearer token` en cada request |
+| `admin.service.spec.ts` | CRUD sectores, gaps, niveles de gobierno |
+| `services/classification.service.spec.ts` | submit, polling, historial, retry |
+| `classifier-page.component.spec.ts` | Formulario, submit, navegación, errores |
+| `history.component.spec.ts` | Lista, ordenamiento, expand, retry |
+| `gap-cards.component.spec.ts` | Tarjetas, colores por confianza, porcentajes |
 
 ```bash
-# Unit tests (cuando existan)
-ng test
+# Ejecutar todos los tests unitarios
+npm test
 
-# E2E tests (cuando existan)
-ng e2e
+# Modo watch (re-ejecuta al guardar)
+npm run test:watch
+
+# Solo tests de integración
+npm run test:integration
+```
+
+---
+
+### 2. Tests E2E (Cypress)
+
+Abren un navegador real contra la app corriendo en `localhost:4200`. Las llamadas al API se interceptan con `cy.intercept()` — el backend no necesita estar corriendo.
+
+| Archivo | Qué prueba |
+|---------|------------|
+| `cypress/e2e/01-auth.cy.ts` | Login exitoso/fallido, logout, registro, enlaces |
+| `cypress/e2e/02-guards.cy.ts` | Rutas protegidas redirigen correctamente |
+| `cypress/e2e/03-classify.cy.ts` | Formulario, submit 202, navegación a historial, errores |
+| `cypress/e2e/04-history.cy.ts` | Lista vacía, estados (pending/completed), expand, retry |
+
+```bash
+# 1. Levantar la app Angular (terminal 1)
+ng serve
+
+# 2. Cypress — UI interactiva (terminal 2, recomendado para desarrollo)
+npm run test:e2e
+# → abre el navegador Cypress en http://localhost:4200
+
+# 3. Cypress — headless (CI / sin UI)
+npm run test:e2e:run
 ```
 
 ## Despliegue

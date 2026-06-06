@@ -6,6 +6,10 @@ import { getApiUrl, API_CONFIG } from '../config/api.config';
 export interface ClassificationRequest {
   title: string;
   description: string;
+  ubigeo_code?: string;
+  department?: string;
+  province?: string;
+  district?: string;
 }
 
 export interface ClassificationResponse {
@@ -13,6 +17,10 @@ export interface ClassificationResponse {
   title?: string;
   description?: string;
   status: string;
+  ubigeo_code?: string;
+  department?: string;
+  province?: string;
+  district?: string;
   created_at?: string;
   completed_at?: string;
 }

@@ -97,7 +97,34 @@ interface Classification {
             <!-- Title & date -->
             <div class="flex-1 min-w-0">
               <p class="font-medium text-white truncate">{{ q.title || 'Sin título' }}</p>
-              <p class="text-xs text-gray-500 mt-0.5">{{ q.created_at | date:'dd/MM/yyyy HH:mm' }}</p>
+              <div class="flex items-center gap-2 mt-0.5 flex-wrap">
+                <p class="text-xs text-gray-500">{{ q.created_at | date:'dd/MM/yyyy HH:mm' }}</p>
+                <span *ngIf="q.district" class="inline-flex items-center gap-1 text-xs text-indigo-300/80">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3 h-3 shrink-0">
+                    <path fill-rule="evenodd" d="M8 1.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9ZM5.5 6a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0Z" clip-rule="evenodd" />
+                    <path d="M8 11.5c-2.5 0-4.772.862-5.8 2.117A7.468 7.468 0 0 0 8 15.5a7.468 7.468 0 0 0 5.8-1.883C12.772 12.362 10.5 11.5 8 11.5Z" />
+                  </svg>
+                  {{ q.department }}
+                  <span class="text-gray-600">/</span>
+                  {{ q.province }}
+                  <span class="text-gray-600">/</span>
+                  {{ q.district }}
+                  <span *ngIf="q.ubigeo_code" class="text-gray-500">({{ q.ubigeo_code }})</span>
+                </span>
+              </div>
+              <!-- Top brecha preview (visible cuando ya se cargó el detalle) -->
+              <div *ngIf="getTopClassification(q.query_id) as top"
+                   class="flex items-center gap-2 mt-1.5">
+                <span [ngClass]="{
+                    'text-emerald-400': top.confidence_score >= 0.8,
+                    'text-amber-400':   top.confidence_score >= 0.6 && top.confidence_score < 0.8,
+                    'text-red-400':     top.confidence_score < 0.6
+                  }" class="text-xs font-bold shrink-0">
+                  {{ top.confidence_score * 100 | number:'1.0-0' }}%
+                </span>
+                <span class="text-xs text-gray-500 shrink-0">Brecha:</span>
+                <span class="text-xs text-gray-300 truncate">{{ top.gap_name }}</span>
+              </div>
             </div>
 
             <!-- Status badge -->
@@ -166,14 +193,18 @@ interface Classification {
                 <div class="flex-1 min-w-0">
                   <p class="font-medium text-white text-sm">{{ c.gap_name || 'Indicador #' + c.gap_indicator_id }}</p>
                   <div class="flex flex-wrap gap-1.5 mt-1.5">
-                    <span *ngIf="c.sector_name" class="text-xs text-gray-400 bg-gray-800 border border-gray-700 px-2 py-0.5 rounded">{{ c.sector_name }}</span>
+                    <span *ngIf="c.sector_name" class="text-xs text-gray-400 bg-gray-800 border border-gray-700 px-2 py-0.5 rounded">
+                      <span class="text-gray-500">Sector: </span>{{ c.sector_name }}
+                    </span>
                     <span *ngIf="c.indicator_type" [ngClass]="c.indicator_type === 'COBERTURA'
                         ? 'bg-blue-900/30 text-blue-400 border-blue-800'
                         : 'bg-purple-900/30 text-purple-400 border-purple-800'"
-                      class="text-xs px-2 py-0.5 rounded border font-semibold">{{ c.indicator_type }}</span>
+                      class="text-xs px-2 py-0.5 rounded border font-semibold">
+                      <span class="opacity-60">Tipo de Indicador: </span>{{ c.indicator_type }}
+                    </span>
                   </div>
                   <p *ngIf="c.justification" class="text-xs text-gray-400 leading-relaxed mt-2">
-                    {{ c.justification }}
+                    <span class="opacity-60">Justificación: </span>{{ c.justification }}
                   </p>
                 </div>
               </div>
@@ -268,6 +299,11 @@ export class HistoryComponent implements OnInit, OnDestroy {
 
   getClassifications(queryId: string): Classification[] {
     return this.classificationsCache[queryId] || [];
+  }
+
+  getTopClassification(queryId: string): Classification | null {
+    const list = this.classificationsCache[queryId];
+    return list && list.length > 0 ? list[0] : null;
   }
 
   retryClassification(q: ClassificationResponse, event: Event) {

@@ -17,6 +17,7 @@ export interface ClassificationResponse {
   title?: string;
   description?: string;
   status: string;
+  classification_status?: 'classified' | 'unclassified';
   ubigeo_code?: string;
   department?: string;
   province?: string;

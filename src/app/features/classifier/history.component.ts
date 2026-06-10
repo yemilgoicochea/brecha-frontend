@@ -138,6 +138,16 @@ interface Classification {
               {{ getStatusLabel(q.status) }}
             </span>
 
+            <!-- Classification status badge -->
+            <span *ngIf="q.status === 'completed' && q.classification_status"
+              [ngClass]="{
+                'bg-emerald-900/20 text-emerald-400 border-emerald-800': q.classification_status === 'classified',
+                'bg-red-900/20 text-red-400 border-red-800': q.classification_status === 'unclassified'
+              }"
+              class="shrink-0 px-3 py-1 rounded-full text-xs font-semibold border">
+              {{ q.classification_status === 'classified' ? 'Clasificado' : 'No clasificado' }}
+            </span>
+
             <!-- Expand chevron -->
             <svg *ngIf="q.status === 'completed'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
               class="w-4 h-4 text-gray-500 shrink-0 transition-transform"
